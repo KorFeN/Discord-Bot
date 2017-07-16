@@ -5,11 +5,18 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Net.Providers.WS4Net;
 using System.Linq;
+using Discord.Commands;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace Discord_Bot
 {
     public class Program
     {
+        private CommandService commands;
+        private DiscordSocketClient client;
+        private IServiceProvider services;
+
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -21,14 +28,18 @@ namespace Discord_Bot
             config.AlwaysDownloadUsers = true;
             config.MessageCacheSize = 1000;
             //TODO: Set Correct DateTimeOffset.
-
-            var client = new DiscordSocketClient(config);
-
-
+            
+            client = new DiscordSocketClient(config);
             client.Log += Log;
             client.MessageReceived += Client_MessageReceived;
             client.MessageUpdated += Client_MessageUpdated;
             client.MessageDeleted += Client_MessageDeleted;
+
+            commands = new CommandService();
+            services = new ServiceCollection()
+                .BuildServiceProvider();
+
+            await InstallCommands();
 
             string token = File.ReadAllText(@"..\..\Token.txt");
             await client.LoginAsync(TokenType.Bot, token);
@@ -38,6 +49,30 @@ namespace Discord_Bot
             await Task.Delay(-1);
         }
 
+        public async Task InstallCommands()
+        {
+            // Discover all of the commands in this assembly and load them.
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+        }
+        
+        public async Task RunCommand(SocketMessage messageParam)
+        {
+            // Don't process the command if it was a System Message
+            var message = messageParam as SocketUserMessage;
+            if (message == null) return;
+            // Create a number to track where the prefix ends and the command begins
+            int argPos = 0;
+            // Determine if the message is a command, based on if it starts with '!' or a mention prefix
+            if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))) return;
+            // Create a Command Context
+            var context = new CommandContext(client, message);
+            // Execute the command. (result does not indicate a return value, 
+            // rather an object stating if the command executed successfully)
+            var result = await commands.ExecuteAsync(context, argPos, services);
+            if (!result.IsSuccess)
+                await context.Channel.SendMessageAsync(result.ErrorReason);
+        }
+
         private Task Client_MessageDeleted(Cacheable<IMessage, ulong> arg1, ISocketMessageChannel arg2)
         {
             if (arg2 is SocketTextChannel)
@@ -45,7 +80,7 @@ namespace Discord_Bot
                 var channel = arg2 as SocketTextChannel;
                 if (channel.Name != "logs")
                 {
-                    var logChannel = channel.Guild.Channels.OfType<SocketTextChannel>().First(p => p.Name == "logs");
+                    var logChannel = channel.Guild.GetLogChannel();
                     logChannel.SendMessageAsync("```md" + "\n" +
                         "# Message DELETED" + "\n" +
                         arg1.Value.Timestamp.ToString() + "\n" +
@@ -58,10 +93,7 @@ namespace Discord_Bot
                     Console.WriteLine("<" + arg1.Value.Channel + " : " + arg1.Value.Author + "> [DELETED] : " + arg1.Value + " [BY] " + arg1.Value.Author);
                 }
             }
-
             
-
-
             return Task.CompletedTask;
         }
 
@@ -73,7 +105,8 @@ namespace Discord_Bot
                 var channel = arg3 as SocketTextChannel;
                 if(channel.Name != "logs")
                 {
-                    var logChannel = channel.Guild.Channels.OfType<SocketTextChannel>().First(p => p.Name == "logs");
+                    var logChannel = channel.Guild.GetLogChannel();
+
                     logChannel.SendMessageAsync("```md" + "\n" +
                         "# Message EDITED" + "\n" +
                         arg2.EditedTimestamp.ToString() + "\n" +
@@ -92,12 +125,16 @@ namespace Discord_Bot
             return Task.CompletedTask;
         }
 
-        private Task Client_MessageReceived(SocketMessage arg)
+        private async Task Client_MessageReceived(SocketMessage arg)
         {
-            //TODO: Filter out messages from the bot itself
+            if (arg.Author.IsBot)
+            {
+                return;
+            }
+
+            await RunCommand(arg);
 
             Console.WriteLine("<" + arg.Channel + " : " + arg.Author + "> : " + arg.Content);
-            return Task.CompletedTask;
         }
 
         private Task Log(LogMessage msg)
