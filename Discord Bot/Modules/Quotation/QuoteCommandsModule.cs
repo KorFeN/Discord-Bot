@@ -1,5 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,16 +10,13 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Discord_Bot
+namespace Discord_Bot.Modules.Quotation
 {
-    public class QuoteModule : ModuleBase
+    public class QuoteCommandsModule : ModuleBase
     {
-        public QuoteModule()
-        {
-        }
-
         [Command("quote")]
         [Summary("Quote a player")]
+        [RequireContext(ContextType.Guild)]
         public async Task Quote(string user, [Remainder]string quote)
         {
             if (quote.Length < 5)
@@ -36,9 +35,15 @@ namespace Discord_Bot
                 return;
             }
 
-            string line = WebUtility.HtmlEncode(user) + "#" + WebUtility.HtmlEncode(quote);
-            
-            File.AppendAllText("quotes.txt", line);
+            await QuoteModule.AddQuote(new Quote()
+            {
+                Creator =  Context.Message.Author.Username,
+                Created = DateTime.Now,
+                Enabled = true,
+                QuoteText = quote,
+                Username = user,
+                QuoteTime = DateTime.Now,
+            });
             
             await Context.Channel.SendMessageAsync("Quote added: " + quote);
         }
