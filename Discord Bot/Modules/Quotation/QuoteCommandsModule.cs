@@ -21,17 +21,17 @@ namespace Discord_Bot.Modules.Quotation
         {
             if (quote.Length < 5)
             {
-                await Context.Channel.SendMessageAsync("quote to short: " + quote);
+                await ReplyAsync("quote to short: " + quote);
                 return;
             }
             if (Context.Message.MentionedUserIds.Count == 0)
             {
-                await Context.Channel.SendMessageAsync("No user mentioned");
+                await ReplyAsync("No user mentioned");
                 return;
             }
             if (Context.Message.MentionedUserIds.Count >= 2)
             {
-                await Context.Channel.SendMessageAsync("Only one user may be mentioned");
+                await ReplyAsync("Only one user may be mentioned");
                 return;
             }
 
@@ -45,7 +45,7 @@ namespace Discord_Bot.Modules.Quotation
                 QuoteTime = DateTime.Now,
             });
             
-            await Context.Channel.SendMessageAsync("Quote added: " + quote);
+            await ReplyAsync("Quote added: " + quote);
         }
     }
 }
