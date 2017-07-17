@@ -17,14 +17,14 @@ namespace Discord_Bot.Modules.Quotation
 
         static Timer updateTimer;
         static JsonSerializer serializer;
-        static List<Quote> quotes = new List<Quote>();
+        static List<Quote> quotes = new List<Quote>(); //TODO: separera quotes mellan olika servrar
         static DiscordSocketClient client;
 
         public static async Task Start(DiscordSocketClient client)
         {
             QuoteModule.client = client;
             serializer = new JsonSerializer();
-            serializer.Error += Serializer_Error;
+            serializer.Error += (s, e) => Console.WriteLine("[ERROR][Serializer]" + e);
 
             await LoadQuotes();
 
@@ -34,24 +34,19 @@ namespace Discord_Bot.Modules.Quotation
             updateTimer.Interval = 1000;
             updateTimer.Start();
         }
-
-        private static void Serializer_Error(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
-        {
-            Console.Write(e.ToString());
-        }
-
+        
         private static void UpdateChannel(object sender, ElapsedEventArgs e)
         {
             var currentDate = DateTime.Now.Date;
             if (QuoteSettings.Default.LastUpdate.Date != currentDate)
             {
-                UpdateQuote().Wait();
+                UpdateQuotes().Wait();
                 QuoteSettings.Default.LastUpdate = currentDate;
                 QuoteSettings.Default.Save();
             }
         }
 
-        private static async Task UpdateQuote()
+        public static async Task UpdateQuotes()
         {
             Quote newQuote;
             lock (quotes)
@@ -122,6 +117,14 @@ namespace Discord_Bot.Modules.Quotation
             }
             
             await Task.Run((Action)SaveQuotes);
+        }
+
+        public static IEnumerable<Quote> GetQuotesFrom(IUser user)
+        {
+            lock (quotes)
+            {
+                return quotes.Where(p => p.QuotedUserID == user.Id).ToList();
+            }
         }
     }
 }

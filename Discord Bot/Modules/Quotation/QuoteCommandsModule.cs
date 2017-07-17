@@ -24,28 +24,31 @@ namespace Discord_Bot.Modules.Quotation
                 await ReplyAsync("quote to short: " + quote);
                 return;
             }
-            if (Context.Message.MentionedUserIds.Count == 0)
-            {
-                await ReplyAsync("No user mentioned");
-                return;
-            }
-            if (Context.Message.MentionedUserIds.Count >= 2)
-            {
-                await ReplyAsync("Only one user may be mentioned");
-                return;
-            }
 
             await QuoteModule.AddQuote(new Quote()
             {
-                CreatorID =  Context.Message.Author.Id,
+                CreatorID = Context.Message.Author.Id,
                 Created = DateTime.Now,
                 Enabled = true,
                 QuoteText = quote,
                 QuotedUserID = user.Id,
                 QuoteTime = DateTime.Now,
             });
-            
+
             await ReplyAsync("Quote added: " + quote);
+        }
+
+        [Command("quotefrom")]
+        [Alias("qfrom")]
+        [Summary("Get quotes made by player")]
+        [RequireContext(ContextType.Guild)]
+        public async Task QuoteFrom(IUser user)
+        {
+            var userQuotes = QuoteModule.GetQuotesFrom(user);
+            var result = string.Join("\n", userQuotes.Select((q, index) => $"#{index} \"{q.QuoteText}\" {q.QuoteTime:yyyy-MM-dd}"));
+
+            await ReplyAsync(result)
+                .OnError(ex => Console.WriteLine("[ERROR]" + ex.Message));
         }
     }
 }
