@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -64,13 +65,17 @@ namespace Discord_Bot.Modules.Quotation
                 newQuote = quotes[index];
             }
 
+            var quoteUser = client.GetUser(newQuote.QuotedUserID);
+
             foreach (var c in client.Guilds
                 .Select(p => p.Channels.FirstOrDefault(c => c.Name == "general"))
                 .Where(p => p != null)
                 .OfType<SocketTextChannel>())
             {
-                //TODO update quote
-                await c.SendMessageAsync(newQuote.QuoteText);
+                string newTopic = $"\"{newQuote.QuoteText}\" - {quoteUser.Username} {newQuote.QuoteTime:yyyy}";
+
+                await c.ModifyAsync(p => (p as TextChannelProperties).Topic = newTopic)
+                    .OnError(ex => Console.WriteLine($"[ERROR][{c.Guild.Name}]Error changing topic: {ex.Message}"));
             }
         }
 

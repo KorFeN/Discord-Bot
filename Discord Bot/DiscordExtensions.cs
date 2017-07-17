@@ -15,5 +15,17 @@ namespace Discord_Bot
         {
             return guild.Channels.OfType<SocketTextChannel>().First(p => p.Name == "logs");
         }
+
+        public static async Task OnError(this Task task, Action<Exception> onError)
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception ex)
+            {
+                onError(ex);
+            }
+        }
     }
 }

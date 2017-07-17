@@ -17,7 +17,7 @@ namespace Discord_Bot.Modules.Quotation
         [Command("quote")]
         [Summary("Quote a player")]
         [RequireContext(ContextType.Guild)]
-        public async Task Quote(string user, [Remainder]string quote)
+        public async Task Quote(IUser user, [Remainder]string quote)
         {
             if (quote.Length < 5)
             {
@@ -37,11 +37,11 @@ namespace Discord_Bot.Modules.Quotation
 
             await QuoteModule.AddQuote(new Quote()
             {
-                Creator =  Context.Message.Author.Username,
+                CreatorID =  Context.Message.Author.Id,
                 Created = DateTime.Now,
                 Enabled = true,
                 QuoteText = quote,
-                Username = user,
+                QuotedUserID = user.Id,
                 QuoteTime = DateTime.Now,
             });
             
