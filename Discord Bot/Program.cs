@@ -111,6 +111,10 @@ namespace Discord_Bot
         {
             if (arg3 is SocketTextChannel)
             {
+                if (arg1.Value.Content == arg2.Content)
+                {
+                    return Task.CompletedTask;
+                }
 
                 var channel = arg3 as SocketTextChannel;
                 if(channel.Name != "logs")
