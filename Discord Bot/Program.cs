@@ -116,6 +116,11 @@ namespace Discord_Bot
                     return Task.CompletedTask;
                 }
 
+                if (arg2.Author.IsBot)
+                {
+                    return Task.CompletedTask;
+                }
+
                 var channel = arg3 as SocketTextChannel;
                 if(channel.Name != "logs")
                 {
