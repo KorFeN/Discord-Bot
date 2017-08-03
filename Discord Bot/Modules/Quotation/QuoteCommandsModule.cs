@@ -17,7 +17,9 @@ namespace Discord_Bot.Modules.Quotation
         [Command("quote")]
         [Summary("Quote a player")]
         [RequireContext(ContextType.Guild)]
-        public async Task Quote(IUser user, [Remainder]string quote)
+        public async Task Quote(
+            [Summary("Mention a User")]IUser user,
+            [Remainder, Summary("Quote text")]string quote)
         {
             if (quote.Length < 5)
             {
@@ -40,9 +42,9 @@ namespace Discord_Bot.Modules.Quotation
 
         [Command("quotefrom")]
         [Alias("qfrom")]
-        [Summary("Get quotes made by player")]
+        [Summary("Get quotes made by user")]
         [RequireContext(ContextType.Guild)]
-        public async Task QuoteFrom(IUser user)
+        public async Task QuoteFrom(IUser user = null)
         {
             var userQuotes = QuoteModule.GetQuotesFrom(user);
             var result = string.Join("\n", userQuotes.Select((q, index) => $"#{index} \"{q.QuoteText}\" {q.QuoteTime:yyyy-MM-dd}"));

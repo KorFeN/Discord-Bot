@@ -103,6 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DiscordExtensions.cs" />
+    <Compile Include="Modules\Help\HelpCommandsModule.cs" />
     <Compile Include="Modules\Quotation\QuoteModule.cs" />
     <Compile Include="Modules\Quotation\QuoteSettings.Designer.cs">
       <AutoGen>True</AutoGen>

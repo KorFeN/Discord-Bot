@@ -43,6 +43,7 @@ namespace Discord_Bot
 
             await InstallCommands();
             await Modules.Quotation.QuoteModule.Start(client);
+            await Modules.Help.HelpCommandsModule.Start(commands);
 
             if (!File.Exists(TokenFile))
             {
