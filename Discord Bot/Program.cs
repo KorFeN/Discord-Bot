@@ -13,6 +13,8 @@ namespace Discord_Bot
 {
     public class Program
     {
+        const string TokenFile = @"..\..\Token.txt";
+
         private CommandService commands;
         private DiscordSocketClient client;
         private IServiceProvider services;
@@ -40,8 +42,15 @@ namespace Discord_Bot
                 .BuildServiceProvider();
 
             await InstallCommands();
+            await Modules.Quotation.QuoteModule.Start(client);
+            await Modules.Help.HelpCommandsModule.Start(commands);
 
-            string token = File.ReadAllText(@"..\..\Token.txt");
+            if (!File.Exists(TokenFile))
+            {
+                Console.WriteLine("No Token.txt found");
+                return;
+            }
+            string token = File.ReadAllText(TokenFile);
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
 
@@ -80,10 +89,12 @@ namespace Discord_Bot
                 var channel = arg2 as SocketTextChannel;
                 if (channel.Name != "logs")
                 {
+                    var messageTimestamp = new DateTimeOffset(arg1.Value.Timestamp.DateTime, DateTimeOffset.Now.Offset);
+
                     var logChannel = channel.Guild.GetLogChannel();
                     logChannel.SendMessageAsync("```md" + "\n" +
                         "# Message DELETED" + "\n" +
-                        arg1.Value.Timestamp.ToString() + "\n" +
+                        messageTimestamp + "\n" +
                         "[" + arg1.Value.Channel + "](" + "DELETED by : " + arg1.Value.Author + ")" + "\n" +
                         "\n" +
                         "<MESSAGE >" + "\n" +
@@ -101,15 +112,26 @@ namespace Discord_Bot
         {
             if (arg3 is SocketTextChannel)
             {
+                if (arg1.Value.Content == arg2.Content)
+                {
+                    return Task.CompletedTask;
+                }
+
+                if (arg2.Author.IsBot)
+                {
+                    return Task.CompletedTask;
+                }
 
                 var channel = arg3 as SocketTextChannel;
                 if(channel.Name != "logs")
                 {
+                    var messageTimestamp = new DateTimeOffset(arg1.Value.Timestamp.DateTime, DateTimeOffset.Now.Offset);
+
                     var logChannel = channel.Guild.GetLogChannel();
 
                     logChannel.SendMessageAsync("```md" + "\n" +
                         "# Message EDITED" + "\n" +
-                        arg2.EditedTimestamp.ToString() + "\n" +
+                        messageTimestamp + "\n" +
                         "[" + arg2.Channel + "](" + arg2.Author + ")" + "\n" +
                         "\n" +
                         "<FROM >" + "\n" +
