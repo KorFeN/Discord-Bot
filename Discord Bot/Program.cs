@@ -42,12 +42,13 @@ namespace Discord_Bot
                 .BuildServiceProvider();
 
             await InstallCommands();
-            await Modules.Quotation.QuoteModule.Start(client);
+            await Modules.MOTD.MotdModule.Start(client);
             await Modules.Help.HelpCommandsModule.Start(commands);
 
             if (!File.Exists(TokenFile))
             {
                 Console.WriteLine("No Token.txt found");
+                Console.ReadKey();
                 return;
             }
             string token = File.ReadAllText(TokenFile);

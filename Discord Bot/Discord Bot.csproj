@@ -104,24 +104,25 @@
   <ItemGroup>
     <Compile Include="DiscordExtensions.cs" />
     <Compile Include="Modules\Help\HelpCommandsModule.cs" />
-    <Compile Include="Modules\Quotation\QuoteModule.cs" />
-    <Compile Include="Modules\Quotation\QuoteSettings.Designer.cs">
+    <Compile Include="Modules\MOTD\MotdModule.cs" />
+    <Compile Include="Modules\MOTD\MotdSettings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>QuoteSettings.settings</DependentUpon>
+      <DependentUpon>MotdSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Modules\Quotation\Quote.cs" />
-    <Compile Include="Modules\Quotation\QuoteCommandsModule.cs" />
+    <Compile Include="Modules\MOTD\Motd.cs" />
+    <Compile Include="Modules\MOTD\MotdCommandsModule.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Modules\Quotation\QuoteSettings.settings">
+    <None Include="Modules\MOTD\MotdSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>QuoteSettings.Designer.cs</LastGenOutput>
+      <LastGenOutput>MotdSettings.Designer.cs</LastGenOutput>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

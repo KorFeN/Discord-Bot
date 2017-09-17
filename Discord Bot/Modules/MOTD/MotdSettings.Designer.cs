@@ -8,16 +8,16 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Discord_Bot.Modules.Quotation {
+namespace Discord_Bot.Modules.MOTD {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "14.0.0.0")]
-    internal sealed partial class QuoteSettings : global::System.Configuration.ApplicationSettingsBase {
+    internal sealed partial class MotdSettings : global::System.Configuration.ApplicationSettingsBase {
         
-        private static QuoteSettings defaultInstance = ((QuoteSettings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new QuoteSettings())));
+        private static MotdSettings defaultInstance = ((MotdSettings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new MotdSettings())));
         
-        public static QuoteSettings Default {
+        public static MotdSettings Default {
             get {
                 return defaultInstance;
             }
@@ -25,6 +25,7 @@ namespace Discord_Bot.Modules.Quotation {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1900-01-01")]
         public global::System.DateTime LastUpdate {
             get {
                 return ((global::System.DateTime)(this["LastUpdate"]));

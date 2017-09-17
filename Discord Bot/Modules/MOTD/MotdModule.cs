@@ -9,24 +9,24 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace Discord_Bot.Modules.Quotation
+namespace Discord_Bot.Modules.MOTD
 {
-    static class QuoteModule
+    static class MotdModule
     {
-        const string jsonfile = "quotes.json";
+        const string jsonfile = "Motds.json";
 
         static Timer updateTimer;
         static JsonSerializer serializer;
-        static List<Quote> quotes = new List<Quote>(); //TODO: separera quotes mellan olika servrar
+        static Dictionary<ulong, Motd> Motds = new Dictionary<ulong, Motd>(); //TODO: separera Motds mellan olika servrar
         static DiscordSocketClient client;
 
         public static async Task Start(DiscordSocketClient client)
         {
-            QuoteModule.client = client;
+            MotdModule.client = client;
             serializer = new JsonSerializer();
             serializer.Error += (s, e) => Console.WriteLine("[ERROR][Serializer]" + e);
 
-            await LoadQuotes();
+            await LoadMotds();
 
             updateTimer = new Timer();
             updateTimer.Enabled = true;
@@ -34,47 +34,57 @@ namespace Discord_Bot.Modules.Quotation
             updateTimer.Interval = 1000;
             updateTimer.Start();
         }
-        
+
+        internal static void ClearMotd(ulong id)
+        {
+            lock (Motds)
+            {
+                Motds.Remove(id);
+            }
+
+            SaveMotds();
+        }
+
         private static void UpdateChannel(object sender, ElapsedEventArgs e)
         {
             var currentDate = DateTime.Now.Date;
-            if (QuoteSettings.Default.LastUpdate.Date != currentDate)
+            if (MotdSettings.Default.LastUpdate.Date != currentDate)
             {
-                UpdateQuotes().Wait();
-                QuoteSettings.Default.LastUpdate = currentDate;
-                QuoteSettings.Default.Save();
+                UpdateMotd().Wait();
+                MotdSettings.Default.LastUpdate = currentDate;
+                MotdSettings.Default.Save();
             }
         }
 
-        public static async Task UpdateQuotes()
+        public static async Task UpdateMotd()
         {
-            Quote newQuote;
-            lock (quotes)
+            Motd newMotd;
+            lock (Motds)
             {
-                if (quotes.Count == 0)
+                if (Motds.Count == 0)
                 {
                     return;
                 }
 
-                int index = new Random().Next(quotes.Count);
-                newQuote = quotes[index];
+                int index = new Random().Next(Motds.Count);
+                newMotd = Motds.Values.ToArray()[index];
             }
 
-            var quoteUser = client.GetUser(newQuote.QuotedUserID);
+            var MotdUser = client.GetUser(newMotd.CreatorID);
 
             foreach (var c in client.Guilds
                 .Select(p => p.Channels.FirstOrDefault(c => c.Name == "general"))
                 .Where(p => p != null)
                 .OfType<SocketTextChannel>())
             {
-                string newTopic = $"\"{newQuote.QuoteText}\" - {quoteUser.Username} {newQuote.QuoteTime:yyyy}";
+                string newTopic = $"\"{newMotd.MotdText}\" //{MotdUser.Username}";
 
                 await c.ModifyAsync(p => (p as TextChannelProperties).Topic = newTopic)
                     .OnError(ex => Console.WriteLine($"[ERROR][{c.Guild.Name}]Error changing topic: {ex.Message}"));
             }
         }
 
-        static Task LoadQuotes()
+        static Task LoadMotds()
         {
             if (!File.Exists(jsonfile))
                 return Task.CompletedTask;
@@ -84,13 +94,13 @@ namespace Discord_Bot.Modules.Quotation
                 using (StreamReader reader = new StreamReader(File.OpenRead(jsonfile)))
                 {
                     var jsonReader = new JsonTextReader(reader);
-                    lock (quotes)
+                    lock (Motds)
                     {
-                        quotes = serializer.Deserialize<List<Quote>>(jsonReader);
+                        Motds = serializer.Deserialize<List<Motd>>(jsonReader).ToDictionary(p => p.CreatorID);
 
-                        if (quotes == null)
+                        if (Motds == null)
                         {
-                            Console.WriteLine("Error loading quotes");
+                            Console.WriteLine("Error loading Motds");
                             throw new ArgumentException();
                         }
                     }
@@ -98,32 +108,39 @@ namespace Discord_Bot.Modules.Quotation
             });
         }
 
-        static void SaveQuotes()
+        static void SaveMotds()
         {
             using (StreamWriter writer = new StreamWriter(File.OpenWrite(jsonfile)))
             {
-                lock (quotes)
+                lock (Motds)
                 {
-                    serializer.Serialize(writer, quotes);
+                    serializer.Serialize(writer, Motds.Values.ToList());
                 }
             }
         }
 
-        public static async Task AddQuote(Quote q)
+        public static async Task SetMotd(Motd q)
         {
-            lock (quotes)
+            lock (Motds)
             {
-                quotes.Add(q);
+                if (Motds.ContainsKey(q.CreatorID))
+                {
+                    Motds[q.CreatorID] = q;
+                }
+                else
+                {
+                    Motds.Add(q.CreatorID, q);
+                }
             }
             
-            await Task.Run((Action)SaveQuotes);
+            await Task.Run((Action)SaveMotds);
         }
 
-        public static IEnumerable<Quote> GetQuotesFrom(IUser user)
+        public static Motd GetMotdFor(IUser user)
         {
-            lock (quotes)
+            lock (Motds)
             {
-                return quotes.Where(p => p.QuotedUserID == user.Id).ToList();
+                return Motds.Where(p => p.Key == user.Id).FirstOrDefault().Value;
             }
         }
     }
